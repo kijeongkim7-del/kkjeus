@@ -170,11 +170,11 @@ input[type=range]::-webkit-slider-thumb {
 
 .card-body {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 0.8fr 0.9fr 0.8fr 1.1fr;
   gap: 0;
 }
 .cf {
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-right: 1px solid var(--border);
 }
 .cf:last-child { border-right: none; }
@@ -194,16 +194,11 @@ input[type=range]::-webkit-slider-thumb {
 .cf input.loc:focus { outline: none; border-color: var(--blue); }
 .cf input.loc::placeholder { color: var(--text3); font-size: 10px; }
 
-.card-pct {
-  padding: 5px 10px 7px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-pct span { font-size: 9px; color: var(--text3); white-space: nowrap; }
-.card-pct input[type=range] { flex: 1; }
-.rpct { font-size: 11px; font-weight: 500; color: var(--green); min-width: 38px; text-align: right; }
+/* 비율 슬라이더 열 */
+.cf-pct { display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+.cf-pct lbl { display: block; font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.cf-pct input[type=range] { width: 100%; }
+.rpct { font-size: 11px; font-weight: 500; color: var(--green); }
 
 .empty { text-align: center; color: var(--text3); padding: 30px; font-size: 13px; }
 </style>
@@ -377,17 +372,16 @@ function createCard(t) {
       '</div>' +
       '<div class="cf">' +
         '<lbl>평단매수($)</lbl>' +
-        '<input class="loc" type="number" id="loc-'+t+'" placeholder="직접입력" min="0.01" step="0.01" inputmode="decimal"'+(loc?' value="'+loc+'"':'')+' oninput="onLocInput(\''+t+'\')">' +
+        '<input class="loc" type="number" id="loc-'+t+'" placeholder="입력" min="0.01" step="0.01" inputmode="decimal"'+(loc?' value="'+loc+'"':'')+' oninput="onLocInput(\''+t+'\')">' +
       '</div>' +
       '<div class="cf">' +
         '<lbl>큰수매수($)</lbl>' +
         '<div class="fv" style="color:var(--green)" id="big-'+t+'">'+bigV+'</div>' +
       '</div>' +
-    '</div>' +
-    '<div class="card-pct">' +
-      '<span>비율</span>' +
-      '<input type="range" id="psl-'+t+'" min="10" max="15" step="0.5" value="'+pct+'" oninput="onRowPct(\''+t+'\',this.value)">' +
-      '<span class="rpct" id="plb-'+t+'">+'+pct.toFixed(1)+'%</span>' +
+      '<div class="cf cf-pct">' +
+        '<lbl>비율 <span class="rpct" id="plb-'+t+'">+'+pct.toFixed(1)+'%</span></lbl>' +
+        '<input type="range" id="psl-'+t+'" min="10" max="15" step="0.5" value="'+pct+'" oninput="onRowPct(\''+t+'\',this.value)">' +
+      '</div>' +
     '</div>';
 
   return card;
