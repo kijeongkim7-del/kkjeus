@@ -203,6 +203,44 @@ input[type=range]::-webkit-slider-thumb {
 .rpct { font-size: 11px; font-weight: 500; color: var(--green); }
 
 .empty { text-align: center; color: var(--text3); padding: 30px; font-size: 13px; }
+/* ── Chart Panel ── */
+.chart-panel {
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: none;
+  flex-direction: column;
+}
+.chart-panel.open { display: flex; }
+.chart-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px 5px;
+}
+.chart-title { font-size: 13px; font-weight: 500; }
+.chart-title em { color: var(--accent); font-style: normal; }
+.chart-tabs { display: flex; gap: 5px; }
+.ctab {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+}
+.ctab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chart-close {
+  background: none; border: none; color: var(--text3);
+  font-size: 16px; cursor: pointer; padding: 2px 4px; line-height: 1;
+}
+.chart-close:active { color: var(--red); }
+.chart-canvas-wrap { padding: 4px 8px 10px; position: relative; height: 200px; }
+.chart-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+.chart-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text3); }
+
 </style>
 </head>
 <body>
@@ -239,6 +277,24 @@ input[type=range]::-webkit-slider-thumb {
 
 <!-- Cards -->
 <div class="cards-wrap" id="cards-wrap"></div>
+<!-- Chart Panel -->
+<div class="chart-panel" id="chart-panel">
+  <div class="chart-top">
+    <div class="chart-title" id="chart-title">차트</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="chart-tabs">
+        <button class="ctab active" id="tab-1m" onclick="switchTab('1m')">1개월</button>
+        <button class="ctab" id="tab-3m" onclick="switchTab('3m')">3개월</button>
+      </div>
+      <button class="chart-close" onclick="closeChart()">✕</button>
+    </div>
+  </div>
+  <div class="chart-canvas-wrap">
+    <canvas id="chart-canvas"></canvas>
+    <div class="chart-loading" id="chart-loading">불러오는 중...</div>
+  </div>
+</div>
+
 
 <script>
 var FKEY = 'd7ledgpr01qm7o0bi3jgd7ledgpr01qm7o0bi3k0';
@@ -277,7 +333,6 @@ function saveCfg() {
     localStorage.setItem(CFG_KEY, JSON.stringify({
       budget: getBudget(),
       gPct: getGlobalPct(),
-      locV: locV,
       pctV: pctV
     }));
   } catch(e){}
@@ -292,7 +347,6 @@ function loadCfg() {
       document.getElementById('global-pct').value = c.gPct;
       document.getElementById('global-pct-val').textContent = '+' + parseFloat(c.gPct).toFixed(1) + '%';
     }
-    if (c.locV) locV = c.locV;
     if (c.pctV) pctV = c.pctV;
   } catch(e){}
 }
@@ -369,7 +423,7 @@ function createCard(t) {
   var priceHtml = p ? '$'+fmt2(p) : '<span style="color:var(--text3);font-size:11px">로딩중</span>';
 
   card.innerHTML =
-    '<div class="card-head">' +
+    '<div class="card-head" onclick="openChart(\''+t+'\')" style="cursor:pointer">' +
       '<div class="ticker-wrap"><span class="ticker">'+t+'</span><span class="ticker-desc" id="desc-'+t+'">'+(DESC[t]||'')+'</span></div>' +
       '<div class="price-wrap">' +
         '<div class="price-block">' +
@@ -541,6 +595,161 @@ loadCfg();
 tickers.forEach(function(t){ ensureDefaults(t); });
 renderCards();
 setTimeout(function(){ loadAll(); scheduleAuto(); }, 400);
+
+/* ── Chart ── */
+var chartInstance = null;
+var chartTicker = null;
+var chartPeriod = '1m';
+
+function openChart(t) {
+  chartTicker = t;
+  var panel = document.getElementById('chart-panel');
+  var title = document.getElementById('chart-title');
+  panel.classList.add('open');
+  title.innerHTML = '<em>' + t + '</em> ' + (DESC[t] || '');
+  loadChart(t, chartPeriod);
+}
+
+function closeChart() {
+  document.getElementById('chart-panel').classList.remove('open');
+  if(chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  chartTicker = null;
+}
+
+function switchTab(period) {
+  chartPeriod = period;
+  document.getElementById('tab-1m').classList.toggle('active', period==='1m');
+  document.getElementById('tab-3m').classList.toggle('active', period==='3m');
+  if(chartTicker) loadChart(chartTicker, period);
+}
+
+function loadChart(ticker, period) {
+  var loading = document.getElementById('chart-loading');
+  loading.style.display = 'flex';
+  loading.textContent = '불러오는 중...';
+  if(chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  var outputsize = period === '1m' ? 23 : 66;
+  var url = 'https://api.twelvedata.com/time_series'
+          + '?symbol=' + ticker
+          + '&interval=1day'
+          + '&outputsize=' + outputsize
+          + '&apikey=47c7442565a0494c82e06d034ac6ffad';
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      loading.style.display = 'none';
+      if(!d || d.status === 'error' || !d.values || d.values.length === 0) {
+        loading.textContent = d.message || '데이터 없음';
+        loading.style.display = 'flex';
+        return;
+      }
+      // TwelveData는 최신순 → 오래된순으로 뒤집기
+      var vals = d.values.slice().reverse();
+      var clean = {t:[], o:[], h:[], l:[], c:[]};
+      vals.forEach(function(v){
+        if(v.open && v.high && v.low && v.close){
+          clean.t.push(new Date(v.datetime).getTime() / 1000);
+          clean.o.push(parseFloat(v.open));
+          clean.h.push(parseFloat(v.high));
+          clean.l.push(parseFloat(v.low));
+          clean.c.push(parseFloat(v.close));
+        }
+      });
+      if(clean.c.length === 0){ loading.textContent='데이터 없음'; loading.style.display='flex'; return; }
+      drawCandle(clean);
+    })
+    .catch(function(){
+      loading.textContent = '조회 실패';
+      loading.style.display = 'flex';
+    });
+}
+
+function drawCandle(d) {
+  var canvas = document.getElementById('chart-canvas');
+  var ctx = canvas.getContext('2d');
+
+  // DPI 선명하게
+  var wrap = canvas.parentElement;
+  var dpr = window.devicePixelRatio || 1;
+  var W = wrap.clientWidth - 16;
+  var H = 180;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  var opens  = d.o, highs = d.h, lows = d.l, closes = d.c, times = d.t;
+  var n = closes.length;
+  var padL = 4, padR = 8, padT = 14, padB = 22;
+  var chartW = W - padL - padR;
+  var chartH = H - padT - padB;
+
+  var minP = Math.min.apply(null, lows);
+  var maxP = Math.max.apply(null, highs);
+  var range = maxP - minP || 1;
+
+  function px(v) { return padT + chartH - ((v - minP) / range) * chartH; }
+
+  var barW = Math.max(2, Math.floor(chartW / n) - 1);
+  var step = chartW / n;
+
+  // 가격 눈금 (4개)
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.textAlign = 'right';
+  for(var gi = 0; gi <= 3; gi++) {
+    var gv = minP + (range * gi / 3);
+    var gy = px(gv);
+    ctx.fillText('$' + gv.toFixed(2), W - padR, gy + 3);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(padL, gy);
+    ctx.lineTo(W - padR - 28, gy);
+    ctx.stroke();
+  }
+
+  // 날짜 라벨 (첫/중/끝)
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.textAlign = 'center';
+  ctx.font = '9px -apple-system, sans-serif';
+  [[0, padL], [Math.floor(n/2), padL + step*Math.floor(n/2)], [n-1, padL + step*(n-1)]].forEach(function(pair){
+    var i = pair[0];
+    var xc = pair[1];
+    var dt = new Date(times[i]*1000);
+    var label = (dt.getMonth()+1) + '/' + dt.getDate();
+    ctx.fillText(label, xc + barW/2, H - 6);
+  });
+
+  // 캔들 그리기
+  for(var i = 0; i < n; i++) {
+    var xc   = padL + step * i + (step - barW) / 2;
+    var yHigh = px(highs[i]);
+    var yLow  = px(lows[i]);
+    var yOpen = px(opens[i]);
+    var yClose= px(closes[i]);
+    var isUp  = closes[i] >= opens[i];
+    var color = isUp ? '#2ecc8f' : '#f06b6b';
+
+    // 심지
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(xc + barW/2, yHigh);
+    ctx.lineTo(xc + barW/2, yLow);
+    ctx.stroke();
+
+    // 몸통
+    var yTop = Math.min(yOpen, yClose);
+    var bodyH = Math.max(1, Math.abs(yClose - yOpen));
+    ctx.fillStyle = color;
+    ctx.fillRect(xc, yTop, barW, bodyH);
+  }
+}
+
 </script>
 </body>
 </html>
