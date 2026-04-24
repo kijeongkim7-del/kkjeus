@@ -326,9 +326,9 @@ function onLocInput(t) {
 }
 
 function updateBig(t) {
-  var loc = locV[t]||0, pct = (pctV[t]!=null)?pctV[t]:getGlobalPct();
+  var p = prices[t], pct = (pctV[t]!=null)?pctV[t]:getGlobalPct();
   var el = document.getElementById('big-'+t);
-  if(el) el.textContent = loc>0 ? '$'+fmt2(loc*(1+pct/100)) : '—';
+  if(el) el.textContent = p ? '$'+fmt2(p*(1+pct/100)) : '—';
 }
 
 function recalcAll() {
@@ -346,7 +346,7 @@ function createCard(t) {
   var p = prices[t], budget = getBudget();
   var qty = (p&&budget) ? Math.floor(budget/p) : null;
   var loc = locV[t]||0, pct = pctV[t];
-  var bigV = loc>0 ? '$'+fmt2(loc*(1+pct/100)) : '—';
+  var bigV = p ? '$'+fmt2(p*(1+pct/100)) : '—';
 
   var card = document.createElement('div');
   card.className = 'card';
@@ -412,6 +412,7 @@ function applyPrice(t, info) {
   }
   var budget = getBudget();
   if(qe && budget && info.c) qe.textContent = Math.floor(budget/info.c)+' 주';
+  updateBig(t);
 }
 
 function fetchQ(ticker) {
