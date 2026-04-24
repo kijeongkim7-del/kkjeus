@@ -8,253 +8,387 @@
 <meta name="apple-mobile-web-app-title" content="LOC 계획표">
 <title>LOC 매수 계획표</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap');
-  :root {
-    --bg: #0f1117;
-    --bg2: #1a1d27;
-    --bg3: #22263a;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #e8eaf0;
-    --text2: #8a8fa8;
-    --text3: #555a72;
-    --green: #34d399;
-    --blue: #60a5fa;
-    --red: #f87171;
-    --accent: #7c6df8;
-    --accent-dim: rgba(124,109,248,0.15);
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', -apple-system, sans-serif; min-height: 100vh; }
-  body { padding-bottom: 40px; -webkit-text-size-adjust: 100%; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap');
+:root {
+  --bg: #0d0f18;
+  --bg2: #161926;
+  --bg3: #1e2235;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e2e4ef;
+  --text2: #7a7f9a;
+  --text3: #454a62;
+  --green: #2ecc8f;
+  --blue: #5ba8f5;
+  --red: #f06b6b;
+  --accent: #7059f0;
+  --accent-dim: rgba(112,89,240,0.18);
+  --r: 10px;
+  --rs: 7px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  height: 100%;
+  overflow: hidden; /* 전체 스크롤 막고 내부만 스크롤 */
+}
+body { display: flex; flex-direction: column; height: 100dvh; -webkit-text-size-adjust: 100%; }
 
-  /* ── Header ── */
-  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-  .header-left h1 { font-size: 16px; font-weight: 500; }
-  .header-left h1 span { color: var(--accent); }
-  .status-txt { font-size: 11px; color: var(--text3); margin-top: 3px; }
-  .refresh-btn { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; cursor: pointer; flex-shrink: 0; }
+/* ── Header (고정) ── */
+.hdr {
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.hdr h1 { font-size: 15px; font-weight: 500; }
+.hdr h1 em { color: var(--accent); font-style: normal; }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+.status { font-size: 10px; color: var(--text3); }
+.btn { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: var(--rs); padding: 6px 11px; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.btn:active { opacity: 0.6; }
 
-  /* ── Settings ── */
-  .section { margin: 12px 16px; }
-  .box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
-  .box-title { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
-  .field-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; display: block; }
-  .field-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-size: 15px; padding: 9px 11px; -webkit-appearance: none; appearance: none; display: block; }
-  .field-input:focus { outline: none; border-color: var(--accent); }
-  .pct-row { margin-top: 12px; }
-  .pct-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .pct-header span { font-size: 11px; color: var(--text2); }
-  .pct-badge { font-size: 13px; font-weight: 500; color: var(--green); }
-  input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: var(--bg3); border-radius: 2px; outline: none; display: block; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg2); cursor: pointer; }
-  input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg2); cursor: pointer; }
+/* ── Settings bar (고정) ── */
+.sbar {
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.sbar-item { display: flex; align-items: center; gap: 6px; }
+.sbar-item label { font-size: 10px; color: var(--text3); white-space: nowrap; }
+.sbar-input {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-size: 13px;
+  padding: 5px 8px;
+  width: 80px;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+.sbar-input:focus { outline: none; border-color: var(--accent); }
+.pct-badge { font-size: 12px; font-weight: 500; color: var(--green); min-width: 40px; }
+input[type=range] {
+  width: 90px; height: 3px;
+  -webkit-appearance: none; appearance: none;
+  background: var(--bg3); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg2);
+  cursor: pointer;
+}
 
-  /* ── Add ticker ── */
-  .add-wrap { display: flex; gap: 8px; }
-  .add-input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 15px; padding: 10px 12px; text-transform: uppercase; -webkit-appearance: none; appearance: none; }
-  .add-input::placeholder { color: var(--text3); font-size: 13px; text-transform: none; }
-  .add-input:focus { outline: none; border-color: var(--accent); }
-  .add-btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: var(--radius-sm); padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; }
-  .add-msg { font-size: 11px; color: var(--text3); margin-top: 8px; min-height: 16px; }
+/* ── Add bar (고정) ── */
+.addbar {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.add-input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-size: 14px;
+  padding: 7px 10px;
+  text-transform: uppercase;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+.add-input::placeholder { color: var(--text3); font-size: 12px; text-transform: none; }
+.add-input:focus { outline: none; border-color: var(--accent); }
+.add-btn {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: var(--rs);
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.add-btn:active { opacity: 0.6; }
+.add-msg { font-size: 10px; color: var(--text3); padding: 0 14px 5px; flex-shrink: 0; min-height: 15px; }
 
-  /* ── Legend ── */
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; }
-  .legend-item { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+/* ── Cards (스크롤 영역) ── */
+.cards-wrap {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
 
-  /* ── Cards ── */
-  .cards { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
-  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+/* ── Card ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+/* 한 카드 높이를 약 16~17vh 로 제한 → 5개가 화면에 들어감 */
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--border);
+}
+.ticker { font-size: 15px; font-weight: 500; letter-spacing: 0.4px; }
+.price-wrap { display: flex; align-items: center; gap: 10px; }
+.price-block { text-align: right; }
+.pv { font-size: 15px; font-weight: 500; }
+.cv { font-size: 10px; margin-top: 1px; }
+.up { color: var(--green); }
+.dn { color: var(--red); }
+.del { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 2px 4px; line-height: 1; }
+.del:active { color: var(--red); }
 
-  .card-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); }
-  .card-ticker { font-size: 18px; font-weight: 500; letter-spacing: 0.5px; }
-  .card-right { display: flex; align-items: center; gap: 10px; }
-  .price-block { text-align: right; }
-  .price-val { font-size: 17px; font-weight: 500; }
-  .chg-val { font-size: 11px; margin-top: 2px; }
-  .up { color: var(--green); }
-  .down { color: var(--red); }
-  .del-btn { background: none; border: none; color: var(--text3); font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; }
+.card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+}
+.cf {
+  padding: 6px 10px;
+  border-right: 1px solid var(--border);
+}
+.cf:last-child { border-right: none; }
+.cf lbl { display: block; font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.cf .fv { font-size: 12px; }
+.cf input.loc {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--blue);
+  font-size: 12px;
+  padding: 3px 5px;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+.cf input.loc:focus { outline: none; border-color: var(--blue); }
+.cf input.loc::placeholder { color: var(--text3); font-size: 10px; }
 
-  .card-body { padding: 12px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .info-field label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
-  .info-val { font-size: 14px; }
-  .loc-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--blue); font-size: 14px; padding: 7px 9px; -webkit-appearance: none; appearance: none; display: block; }
-  .loc-input:focus { outline: none; border-color: var(--blue); }
-  .loc-input::placeholder { color: var(--text3); font-size: 12px; }
-  .span2 { grid-column: 1 / -1; }
+.card-pct {
+  padding: 5px 10px 7px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-pct span { font-size: 9px; color: var(--text3); white-space: nowrap; }
+.card-pct input[type=range] { flex: 1; }
+.rpct { font-size: 11px; font-weight: 500; color: var(--green); min-width: 38px; text-align: right; }
 
-  .card-pct { padding: 4px 14px 13px; }
-  .pct-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-  .pct-label-row span:first-child { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
-  .row-pct-badge { font-size: 12px; font-weight: 500; color: var(--green); }
-
-  .empty { text-align: center; color: var(--text3); padding: 40px; font-size: 14px; }
+.empty { text-align: center; color: var(--text3); padding: 30px; font-size: 13px; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-left">
-    <h1>LOC <span>매수</span> 계획표</h1>
-    <div class="status-txt" id="status-msg">시세 불러오는 중...</div>
-  </div>
-  <button class="refresh-btn" onclick="loadAll()">↻ 새로고침</button>
-</div>
-
-<div class="section">
-  <div class="box">
-    <div class="box-title">전체 설정</div>
-    <label class="field-label">최대 투자금액 ($)</label>
-    <input class="field-input" type="number" id="global-budget" value="250" min="1" step="50" inputmode="decimal" oninput="recalcAll()">
-    <div class="pct-row">
-      <div class="pct-header">
-        <span>큰수매수 기본 비율 (전체 적용)</span>
-        <span class="pct-badge" id="global-pct-val">+10.0%</span>
-      </div>
-      <input type="range" id="global-pct" min="10" max="15" step="0.5" value="10" oninput="onGlobalPct(this.value)">
-    </div>
+<!-- Header -->
+<div class="hdr">
+  <h1>LOC <em>매수</em> 계획표</h1>
+  <div class="hdr-right">
+    <span class="status" id="status-msg">로딩중...</span>
+    <button class="btn" onclick="loadAll()">↻ 갱신</button>
   </div>
 </div>
 
-<div class="section">
-  <div class="add-wrap">
-    <input class="add-input" type="text" id="new-ticker" placeholder="종목 추가 (예: AAPL)" maxlength="10" inputmode="text"
-      onkeydown="if(event.key==='Enter'){this.blur();addTicker();}">
-    <button class="add-btn" onclick="addTicker()">+ 추가</button>
+<!-- Settings -->
+<div class="sbar">
+  <div class="sbar-item">
+    <label>최대투자금($)</label>
+    <input class="sbar-input" type="number" id="global-budget" value="250" min="1" step="50" inputmode="decimal" oninput="recalcAll(); saveCfg()">
   </div>
-  <div class="add-msg" id="add-msg"></div>
-</div>
-
-<div class="section">
-  <div class="legend">
-    <div class="legend-item"><span class="dot" style="background:#60a5fa"></span>LOC 평단: 직접 입력</div>
-    <div class="legend-item"><span class="dot" style="background:#34d399"></span>LOC 큰수 = 평단 × (1+비율%)</div>
-    <div class="legend-item"><span class="dot" style="background:#8a8fa8"></span>매매수량 = 최대투자금 ÷ 현재가</div>
+  <div class="sbar-item">
+    <label>기본비율</label>
+    <input type="range" id="global-pct" min="10" max="15" step="0.5" value="10" oninput="onGlobalPct(this.value)">
+    <span class="pct-badge" id="global-pct-val">+10.0%</span>
   </div>
 </div>
 
-<div class="cards" id="cards-wrap"></div>
+<!-- Add bar -->
+<div class="addbar">
+  <input class="add-input" type="text" id="new-ticker" placeholder="종목 추가 (예: AAPL)" maxlength="10" inputmode="text"
+    onkeydown="if(event.key==='Enter'){this.blur();addTicker();}">
+  <button class="add-btn" onclick="addTicker()">+ 추가</button>
+</div>
+<div class="add-msg" id="add-msg"></div>
+
+<!-- Cards -->
+<div class="cards-wrap" id="cards-wrap"></div>
 
 <script>
-var FINNHUB_KEY = 'd7ledgpr01qm7o0bi3jgd7ledgpr01qm7o0bi3k0';
-var tickers = ['SOXL','FNGU','NAIL','BULZ','URAA','TECL'];
-var prices = {};
-var prevPrices = {};
-var locVals = {};
-var pctVals = {};
+var FKEY = 'd7ledgpr01qm7o0bi3jgd7ledgpr01qm7o0bi3k0';
+var STORE_KEY = 'loc_tickers_v2';
+var CFG_KEY   = 'loc_cfg_v2';
 
-// 초기화
-tickers.forEach(function(t){ pctVals[t] = 10; locVals[t] = 0; });
+var tickers = [];
+var prices = {}, prevP = {}, locV = {}, pctV = {};
 
-function fmt2(n) {
-  if (isNaN(n) || !isFinite(n)) return '—';
-  return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+/* ── 저장/불러오기 ── */
+function saveTickers() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(tickers)); } catch(e){}
 }
-function getBudget() { return parseFloat(document.getElementById('global-budget').value) || 0; }
-function getGlobalPct() { return parseFloat(document.getElementById('global-pct').value) || 10; }
+function loadTickers() {
+  try {
+    var s = localStorage.getItem(STORE_KEY);
+    if (s) tickers = JSON.parse(s);
+  } catch(e){}
+  if (!tickers || tickers.length === 0)
+    tickers = ['SOXL','FNGU','NAIL','BULZ','URAA','TECL'];
+}
+function saveCfg() {
+  try {
+    localStorage.setItem(CFG_KEY, JSON.stringify({
+      budget: getBudget(),
+      gPct: getGlobalPct(),
+      locV: locV,
+      pctV: pctV
+    }));
+  } catch(e){}
+}
+function loadCfg() {
+  try {
+    var s = localStorage.getItem(CFG_KEY);
+    if (!s) return;
+    var c = JSON.parse(s);
+    if (c.budget) document.getElementById('global-budget').value = c.budget;
+    if (c.gPct) {
+      document.getElementById('global-pct').value = c.gPct;
+      document.getElementById('global-pct-val').textContent = '+' + parseFloat(c.gPct).toFixed(1) + '%';
+    }
+    if (c.locV) locV = c.locV;
+    if (c.pctV) pctV = c.pctV;
+  } catch(e){}
+}
 
+/* ── 유틸 ── */
+function fmt2(n) {
+  if (isNaN(n)||!isFinite(n)) return '—';
+  return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function getBudget()    { return parseFloat(document.getElementById('global-budget').value)||0; }
+function getGlobalPct() { return parseFloat(document.getElementById('global-pct').value)||10; }
+
+function ensureDefaults(t) {
+  if (pctV[t]==null) pctV[t] = getGlobalPct();
+  if (locV[t]==null) locV[t] = 0;
+}
+
+/* ── 전체 비율 변경 ── */
 function onGlobalPct(val) {
-  document.getElementById('global-pct-val').textContent = '+' + parseFloat(val).toFixed(1) + '%';
-  tickers.forEach(function(t) {
-    pctVals[t] = parseFloat(val);
-    var sl = document.getElementById('pct-sl-' + t);
-    var lb = document.getElementById('pct-lb-' + t);
-    if (sl) sl.value = val;
-    if (lb) lb.textContent = '+' + parseFloat(val).toFixed(1) + '%';
+  val = parseFloat(val);
+  document.getElementById('global-pct-val').textContent = '+' + val.toFixed(1) + '%';
+  tickers.forEach(function(t){
+    pctV[t] = val;
+    var sl = document.getElementById('psl-'+t), lb = document.getElementById('plb-'+t);
+    if(sl) sl.value = val;
+    if(lb) lb.textContent = '+'+val.toFixed(1)+'%';
     updateBig(t);
   });
+  saveCfg();
 }
 
-function onRowPct(ticker, val) {
-  pctVals[ticker] = parseFloat(val);
-  var lb = document.getElementById('pct-lb-' + ticker);
-  if (lb) lb.textContent = '+' + parseFloat(val).toFixed(1) + '%';
-  updateBig(ticker);
+function onRowPct(t, val) {
+  pctV[t] = parseFloat(val);
+  var lb = document.getElementById('plb-'+t);
+  if(lb) lb.textContent = '+'+parseFloat(val).toFixed(1)+'%';
+  updateBig(t);
+  saveCfg();
 }
 
-function onLocInput(ticker) {
-  var val = parseFloat(document.getElementById('loc-' + ticker).value);
-  locVals[ticker] = isNaN(val) ? 0 : val;
-  updateBig(ticker);
+function onLocInput(t) {
+  var v = parseFloat(document.getElementById('loc-'+t).value);
+  locV[t] = isNaN(v) ? 0 : v;
+  updateBig(t);
+  saveCfg();
 }
 
-function updateBig(ticker) {
-  var loc = locVals[ticker] || 0;
-  var pct = (pctVals[ticker] != null) ? pctVals[ticker] : getGlobalPct();
-  var el = document.getElementById('big-' + ticker);
-  if (el) el.textContent = loc > 0 ? '$' + fmt2(loc * (1 + pct / 100)) : '—';
+function updateBig(t) {
+  var loc = locV[t]||0, pct = (pctV[t]!=null)?pctV[t]:getGlobalPct();
+  var el = document.getElementById('big-'+t);
+  if(el) el.textContent = loc>0 ? '$'+fmt2(loc*(1+pct/100)) : '—';
 }
 
 function recalcAll() {
   var budget = getBudget();
-  tickers.forEach(function(t) {
-    var price = prices[t];
-    var el = document.getElementById('qty-' + t);
-    if (el && price && budget) el.textContent = Math.floor(budget / price).toLocaleString('en-US') + ' 주';
-    else if (el) el.textContent = '—';
+  tickers.forEach(function(t){
+    var p = prices[t], el = document.getElementById('qty-'+t);
+    if(el && p && budget) el.textContent = Math.floor(budget/p)+' 주';
+    else if(el) el.textContent = '—';
   });
 }
 
+/* ── 카드 생성 ── */
 function createCard(t) {
-  var price = prices[t];
-  var budget = getBudget();
-  var qty = (price && budget) ? Math.floor(budget / price) : null;
-  var locV = locVals[t] || 0;
-  var pct = (pctVals[t] != null) ? pctVals[t] : getGlobalPct();
-  var bigV = locV > 0 ? '$' + fmt2(locV * (1 + pct / 100)) : '—';
+  ensureDefaults(t);
+  var p = prices[t], budget = getBudget();
+  var qty = (p&&budget) ? Math.floor(budget/p) : null;
+  var loc = locV[t]||0, pct = pctV[t];
+  var bigV = loc>0 ? '$'+fmt2(loc*(1+pct/100)) : '—';
 
   var card = document.createElement('div');
   card.className = 'card';
-  card.id = 'card-' + t;
+  card.id = 'card-'+t;
 
-  // card-head
-  var head = document.createElement('div');
-  head.className = 'card-head';
-  head.innerHTML =
-    '<div class="card-ticker">' + t + '</div>' +
-    '<div class="card-right">' +
-      '<div class="price-block">' +
-        '<div class="price-val" id="price-' + t + '">' + (price ? '$' + fmt2(price) : '<span style="color:var(--text3);font-size:13px">로딩중...</span>') + '</div>' +
-        '<div class="chg-val" id="chg-' + t + '"></div>' +
+  var priceHtml = p ? '$'+fmt2(p) : '<span style="color:var(--text3);font-size:11px">로딩중</span>';
+
+  card.innerHTML =
+    '<div class="card-head">' +
+      '<span class="ticker">'+t+'</span>' +
+      '<div class="price-wrap">' +
+        '<div class="price-block">' +
+          '<div class="pv" id="pv-'+t+'">'+priceHtml+'</div>' +
+          '<div class="cv" id="cv-'+t+'"></div>' +
+        '</div>' +
+        '<button class="del" onclick="removeTicker(\''+t+'\')">✕</button>' +
       '</div>' +
-      '<button class="del-btn" onclick="removeTicker(\'' + t + '\')" title="삭제">✕</button>' +
+    '</div>' +
+    '<div class="card-body">' +
+      '<div class="cf">' +
+        '<lbl>매매수량</lbl>' +
+        '<div class="fv" id="qty-'+t+'">'+(qty!==null ? qty+' 주' : '—')+'</div>' +
+      '</div>' +
+      '<div class="cf">' +
+        '<lbl>평단매수($)</lbl>' +
+        '<input class="loc" type="number" id="loc-'+t+'" placeholder="직접입력" min="0.01" step="0.01" inputmode="decimal"'+(loc?' value="'+loc+'"':'')+' oninput="onLocInput(\''+t+'\')">' +
+      '</div>' +
+      '<div class="cf">' +
+        '<lbl>큰수매수($)</lbl>' +
+        '<div class="fv" style="color:var(--green)" id="big-'+t+'">'+bigV+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-pct">' +
+      '<span>비율</span>' +
+      '<input type="range" id="psl-'+t+'" min="10" max="15" step="0.5" value="'+pct+'" oninput="onRowPct(\''+t+'\',this.value)">' +
+      '<span class="rpct" id="plb-'+t+'">+'+pct.toFixed(1)+'%</span>' +
     '</div>';
-  card.appendChild(head);
-
-  // card-body
-  var body = document.createElement('div');
-  body.className = 'card-body';
-  body.innerHTML =
-    '<div class="info-field">' +
-      '<label>매매 수량</label>' +
-      '<div class="info-val" id="qty-' + t + '">' + (qty !== null ? qty.toLocaleString('en-US') + ' 주' : '—') + '</div>' +
-    '</div>' +
-    '<div class="info-field">' +
-      '<label>LOC 큰수매수</label>' +
-      '<div class="info-val" style="color:var(--green)" id="big-' + t + '">' + bigV + '</div>' +
-    '</div>' +
-    '<div class="info-field span2">' +
-      '<label>LOC 평단매수 ($) — 직접 입력</label>' +
-      '<input class="loc-input" type="number" id="loc-' + t + '" placeholder="평단 가격 입력" min="0.01" step="0.01" inputmode="decimal"' +
-        (locV ? ' value="' + locV + '"' : '') +
-        ' oninput="onLocInput(\'' + t + '\')">' +
-    '</div>';
-  card.appendChild(body);
-
-  // card-pct
-  var pctDiv = document.createElement('div');
-  pctDiv.className = 'card-pct';
-  pctDiv.innerHTML =
-    '<div class="pct-label-row">' +
-      '<span>큰수매수 비율</span>' +
-      '<span class="row-pct-badge" id="pct-lb-' + t + '">+' + pct.toFixed(1) + '%</span>' +
-    '</div>' +
-    '<input type="range" id="pct-sl-' + t + '" min="10" max="15" step="0.5" value="' + pct + '" oninput="onRowPct(\'' + t + '\', this.value)">';
-  card.appendChild(pctDiv);
 
   return card;
 }
@@ -262,121 +396,108 @@ function createCard(t) {
 function renderCards() {
   var wrap = document.getElementById('cards-wrap');
   wrap.innerHTML = '';
-  if (tickers.length === 0) {
-    wrap.innerHTML = '<div class="empty">종목을 추가해 주세요</div>';
-    return;
-  }
-  tickers.forEach(function(t) {
-    wrap.appendChild(createCard(t));
-  });
+  if (!tickers.length) { wrap.innerHTML='<div class="empty">종목을 추가해 주세요</div>'; return; }
+  tickers.forEach(function(t){ wrap.appendChild(createCard(t)); });
 }
 
-function updateCardPrice(t, info) {
+/* ── 가격 업데이트 ── */
+function applyPrice(t, info) {
+  var pe = document.getElementById('pv-'+t);
+  var ce = document.getElementById('cv-'+t);
+  var qe = document.getElementById('qty-'+t);
   if (!info) {
-    var pe = document.getElementById('price-' + t);
-    if (pe) pe.innerHTML = '<span style="color:var(--red);font-size:12px">조회 실패</span>';
+    if(pe) pe.innerHTML = '<span style="color:var(--red);font-size:11px">실패</span>';
     return;
   }
-  prices[t] = info.price;
-  prevPrices[t] = info.prev;
-
-  var pe = document.getElementById('price-' + t);
-  if (pe) pe.textContent = '$' + fmt2(info.price);
-
-  var chg = info.prev ? ((info.price - info.prev) / info.prev * 100) : 0;
-  var ce = document.getElementById('chg-' + t);
-  if (ce) {
-    ce.className = 'chg-val ' + (chg >= 0 ? 'up' : 'down');
-    ce.textContent = (chg >= 0 ? '▲ +' : '▼ ') + chg.toFixed(2) + '%';
+  prices[t] = info.c; prevP[t] = info.pc;
+  if(pe) pe.textContent = '$'+fmt2(info.c);
+  if(ce && info.pc) {
+    var chg = (info.c-info.pc)/info.pc*100;
+    ce.className = 'cv '+(chg>=0?'up':'dn');
+    ce.textContent = (chg>=0?'▲ +':'▼ ')+chg.toFixed(2)+'%';
   }
-
   var budget = getBudget();
-  var qe = document.getElementById('qty-' + t);
-  if (qe && budget) qe.textContent = Math.floor(budget / info.price).toLocaleString('en-US') + ' 주';
+  if(qe && budget && info.c) qe.textContent = Math.floor(budget/info.c)+' 주';
 }
 
-function fetchQuote(ticker) {
-  return fetch('https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=' + FINNHUB_KEY)
-    .then(function(res) { return res.json(); })
-    .then(function(d) {
-      if (!d || !d.c || d.c === 0) return null;
-      return { price: d.c, prev: d.pc };
-    })
-    .catch(function() { return null; });
+function fetchQ(ticker) {
+  return fetch('https://finnhub.io/api/v1/quote?symbol='+ticker+'&token='+FKEY)
+    .then(function(r){ return r.json(); })
+    .then(function(d){ return (d&&d.c&&d.c!==0) ? d : null; })
+    .catch(function(){ return null; });
 }
 
+/* ── 순차 로딩 (300ms 간격) ── */
 function loadAll() {
-  document.getElementById('status-msg').textContent = '시세 불러오는 중...';
-  var total = tickers.length;
-  var loaded = 0;
-
-  // 순차적으로 요청 (스마트폰에서 동시 요청이 많으면 실패하는 경우 방지)
-  function loadNext(index) {
-    if (index >= tickers.length) {
-      var now = new Date();
-      var mm = String(now.getMonth()+1).padStart(2,'0');
-      var dd = String(now.getDate()).padStart(2,'0');
-      var hh = String(now.getHours()).padStart(2,'0');
-      var mi = String(now.getMinutes()).padStart(2,'0');
-      document.getElementById('status-msg').textContent = '업데이트: ' + mm + '/' + dd + ' ' + hh + ':' + mi;
-      return;
-    }
-    var t = tickers[index];
-    fetchQuote(t).then(function(info) {
-      updateCardPrice(t, info);
-      loaded++;
-      document.getElementById('status-msg').textContent = loaded + '/' + total + '개 로딩 완료';
-      // 300ms 간격으로 순차 요청 (API rate limit 방지)
-      setTimeout(function() { loadNext(index + 1); }, 300);
+  document.getElementById('status-msg').textContent = '로딩중...';
+  var idx = 0, total = tickers.length, done = 0;
+  function next() {
+    if(idx>=tickers.length) return;
+    var t = tickers[idx++];
+    fetchQ(t).then(function(info){
+      applyPrice(t, info);
+      done++;
+      document.getElementById('status-msg').textContent = done+'/'+total;
+      if(done===total) {
+        var now = new Date();
+        document.getElementById('status-msg').textContent =
+          (now.getMonth()+1)+'/'+(now.getDate())+' '+
+          String(now.getHours()).padStart(2,'0')+':'+
+          String(now.getMinutes()).padStart(2,'0')+' 기준';
+      }
+      setTimeout(next, 300);
     });
   }
-  loadNext(0);
+  next();
 }
 
+/* ── 추가/삭제 ── */
 function addTicker() {
-  var input = document.getElementById('new-ticker');
+  var inp = document.getElementById('new-ticker');
   var msg = document.getElementById('add-msg');
-  var t = input.value.trim().toUpperCase();
+  var t = (inp.value||'').trim().toUpperCase();
+  inp.value = '';
   if (!t) return;
   if (tickers.indexOf(t) !== -1) {
-    msg.textContent = t + ' 은 이미 추가되어 있습니다';
-    setTimeout(function(){ msg.textContent = ''; }, 2500);
+    msg.textContent = t+' 은 이미 있습니다';
+    setTimeout(function(){ msg.textContent=''; }, 2000);
     return;
   }
   tickers.push(t);
-  pctVals[t] = getGlobalPct();
-  locVals[t] = 0;
-  input.value = '';
-  msg.textContent = t + ' 추가 중...';
+  saveTickers();
+  ensureDefaults(t);
 
   var wrap = document.getElementById('cards-wrap');
   var emptyEl = wrap.querySelector('.empty');
-  if (emptyEl) wrap.innerHTML = '';
+  if(emptyEl) wrap.innerHTML = '';
   wrap.appendChild(createCard(t));
 
-  fetchQuote(t).then(function(info) {
-    updateCardPrice(t, info);
-    msg.textContent = info ? t + ' 추가 완료 ✓' : t + ' 조회 실패 — 티커를 확인해 주세요';
-    setTimeout(function(){ msg.textContent = ''; }, 3000);
+  msg.textContent = t+' 조회중...';
+  fetchQ(t).then(function(info){
+    applyPrice(t, info);
+    saveCfg();
+    msg.textContent = info ? t+' 추가완료 ✓' : t+' 조회실패 (티커확인)';
+    setTimeout(function(){ msg.textContent=''; }, 2500);
   });
 }
 
-function removeTicker(ticker) {
-  tickers = tickers.filter(function(t){ return t !== ticker; });
-  delete prices[ticker];
-  delete prevPrices[ticker];
-  delete locVals[ticker];
-  delete pctVals[ticker];
-  var card = document.getElementById('card-' + ticker);
-  if (card) card.remove();
-  if (tickers.length === 0) {
+function removeTicker(t) {
+  tickers = tickers.filter(function(x){ return x!==t; });
+  saveTickers();
+  delete prices[t]; delete prevP[t]; delete locV[t]; delete pctV[t];
+  saveCfg();
+  var card = document.getElementById('card-'+t);
+  if(card) card.remove();
+  if(!tickers.length)
     document.getElementById('cards-wrap').innerHTML = '<div class="empty">종목을 추가해 주세요</div>';
-  }
 }
 
+/* ── 초기화 ── */
+loadTickers();
+loadCfg();
+tickers.forEach(function(t){ ensureDefaults(t); });
 renderCards();
-// 페이지 로드 후 약간 딜레이 후 시세 조회 (스마트폰 렌더링 완료 대기)
-setTimeout(function(){ loadAll(); }, 500);
+setTimeout(loadAll, 400);
 </script>
 </body>
 </html>
