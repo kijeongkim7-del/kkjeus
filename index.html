@@ -158,7 +158,9 @@ input[type=range]::-webkit-slider-thumb {
   padding: 7px 11px;
   border-bottom: 1px solid var(--border);
 }
+.ticker-wrap { display: flex; align-items: baseline; gap: 7px; }
 .ticker { font-size: 15px; font-weight: 500; letter-spacing: 0.4px; }
+.ticker-desc { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
 .price-wrap { display: flex; align-items: center; gap: 10px; }
 .price-block { text-align: right; }
 .pv { font-size: 15px; font-weight: 500; }
@@ -178,14 +180,14 @@ input[type=range]::-webkit-slider-thumb {
   border-right: 1px solid var(--border);
 }
 .cf:last-child { border-right: none; }
-.cf lbl { display: block; font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.cf .fv { font-size: 12px; }
+.cf lbl { display: block; font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.cf .fv { font-size: 12px; color: var(--text); font-weight: 500; }
 .cf input.loc {
   width: 100%;
   background: var(--bg3);
   border: 1px solid var(--border2);
   border-radius: 5px;
-  color: var(--blue);
+  color: #a8d4ff;
   font-size: 12px;
   padding: 3px 5px;
   -webkit-appearance: none;
@@ -196,7 +198,7 @@ input[type=range]::-webkit-slider-thumb {
 
 /* 비율 슬라이더 열 */
 .cf-pct { display: flex; flex-direction: column; justify-content: center; gap: 3px; }
-.cf-pct lbl { display: block; font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.cf-pct lbl { display: block; font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
 .cf-pct input[type=range] { width: 100%; }
 .rpct { font-size: 11px; font-weight: 500; color: var(--green); }
 
@@ -210,7 +212,7 @@ input[type=range]::-webkit-slider-thumb {
   <h1>LOC <em>매수</em> 계획표</h1>
   <div class="hdr-right">
     <span class="status" id="status-msg">로딩중...</span>
-    <button class="btn" onclick="loadAll()">↻ 갱신</button>
+    <button class="btn" onclick="manualRefresh()">↻ <span id="countdown">30</span>s</button>
   </div>
 </div>
 
@@ -240,6 +242,18 @@ input[type=range]::-webkit-slider-thumb {
 
 <script>
 var FKEY = 'd7ledgpr01qm7o0bi3jgd7ledgpr01qm7o0bi3k0';
+var DESC = {
+  'SOXL':'반도체 3x ETF','FNGU':'빅테크 3x ETF','NAIL':'주택건설 3x ETF',
+  'BULZ':'기술주 3x ETF','URAA':'우라늄 ETF','TECL':'기술주 3x ETF',
+  'AAPL':'Apple','MSFT':'Microsoft','GOOGL':'Alphabet','AMZN':'Amazon',
+  'META':'Meta','NVDA':'Nvidia','TSLA':'Tesla','NFLX':'Netflix',
+  'AVGO':'Broadcom','AMD':'AMD','SPY':'S&P500 ETF','QQQ':'나스닥 ETF',
+  'TQQQ':'나스닥 3x ETF','LABU':'바이오 3x ETF','DPST':'은행 3x ETF',
+  'CURE':'헬스케어 3x ETF','WEBL':'인터넷 3x ETF','HIBL':'고배당 3x ETF',
+  'DFEN':'항공방산 3x ETF','RETL':'소매 3x ETF','MIDU':'중형주 3x ETF',
+  'FAS':'금융 3x ETF','TNA':'소형주 3x ETF','UDOW':'다우 3x ETF',
+  'UPRO':'S&P500 3x ETF','SPXL':'S&P500 3x ETF'
+};
 var STORE_KEY = 'loc_tickers_v2';
 var CFG_KEY   = 'loc_cfg_v2';
 
@@ -356,7 +370,7 @@ function createCard(t) {
 
   card.innerHTML =
     '<div class="card-head">' +
-      '<span class="ticker">'+t+'</span>' +
+      '<div class="ticker-wrap"><span class="ticker">'+t+'</span><span class="ticker-desc" id="desc-'+t+'">'+(DESC[t]||'')+'</span></div>' +
       '<div class="price-wrap">' +
         '<div class="price-block">' +
           '<div class="pv" id="pv-'+t+'">'+priceHtml+'</div>' +
@@ -487,12 +501,46 @@ function removeTicker(t) {
     document.getElementById('cards-wrap').innerHTML = '<div class="empty">종목을 추가해 주세요</div>';
 }
 
-/* ── 초기화 ── */
+/* ── 자동 갱신 (30초 간격) ── */
+var AUTO_INTERVAL = 30;
+var countdownVal = AUTO_INTERVAL;
+var countdownTimer = null;
+var autoTimer = null;
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdownVal = AUTO_INTERVAL;
+  var el = document.getElementById('countdown');
+  if(el) el.textContent = countdownVal;
+  countdownTimer = setInterval(function(){
+    countdownVal--;
+    var el = document.getElementById('countdown');
+    if(el) el.textContent = countdownVal < 0 ? 0 : countdownVal;
+  }, 1000);
+}
+
+function scheduleAuto() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(function(){
+    loadAll();
+    scheduleAuto();
+  }, AUTO_INTERVAL * 1000);
+  startCountdown();
+}
+
+function manualRefresh() {
+  clearTimeout(autoTimer);
+  clearInterval(countdownTimer);
+  loadAll();
+  scheduleAuto();
+}
+
+/* ── 종료화 ── */
 loadTickers();
 loadCfg();
 tickers.forEach(function(t){ ensureDefaults(t); });
 renderCards();
-setTimeout(loadAll, 400);
+setTimeout(function(){ loadAll(); scheduleAuto(); }, 400);
 </script>
 </body>
 </html>
